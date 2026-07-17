@@ -42,7 +42,7 @@ export default function DashboardHome() {
             const response = await axios.get('http://localhost:8000/api/pending-users/', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setPendingUsers(response.data);
+            setPendingUsers(response.data as any);
         } catch (error) {
             console.error("Failed to load pending users", error);
         }
