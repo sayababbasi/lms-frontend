@@ -10,6 +10,12 @@ const api = axios.create({
 // Request interceptor to add token
 api.interceptors.request.use(
     (config) => {
+        // CRITICAL FIX: If sending FormData, delete the Content-Type header
+        // so Axios can automatically generate it with the correct boundary string.
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
+
         const token = localStorage.getItem('access_token');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;

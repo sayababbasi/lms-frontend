@@ -30,11 +30,9 @@ export const CoursesService = {
         const formData = new FormData();
         formData.append('lessonId', lessonId.toString());
         formData.append('video', videoFile);
-        const response = await api.post('/youtube/upload/', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
+        
+        // Remove explicit Content-Type so Axios auto-generates the boundary string!
+        const response = await api.post('/youtube/upload/', formData);
         return response.data;
     },
 
@@ -43,11 +41,7 @@ export const CoursesService = {
         formData.append('lesson_id', lessonId.toString());
         formData.append('file', file);
         formData.append('title', file.name); // Default title to filename
-        const response = await api.post('/resources/', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
+        const response = await api.post('/resources/', formData);
         return response.data;
     },
 
