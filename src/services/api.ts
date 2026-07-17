@@ -14,6 +14,7 @@ api.interceptors.request.use(
         // so Axios can automatically generate it with the correct boundary string.
         if (config.data instanceof FormData) {
             delete config.headers['Content-Type'];
+            delete config.headers['content-type'];
         }
 
         const token = localStorage.getItem('access_token');

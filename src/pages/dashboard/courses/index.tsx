@@ -50,7 +50,25 @@ export default function CoursesPage() {
             loadCourses();
         } catch (error: any) {
             console.error("Failed to save course", error);
-            const message = error.response?.data?.detail || "Failed to save course. Check inputs.";
+            let message = "Failed to save course. Check inputs.";
+            if (error.response?.data) {
+                const data = error.response.data;
+                if (typeof data === 'string') {
+                    message = data;
+                } else if (data.detail) {
+                    message = data.detail;
+                } else {
+                    const getFirstError = (obj: any): string => {
+                        for (const key in obj) {
+                            if (Array.isArray(obj[key])) return `${key.charAt(0).toUpperCase() + key.slice(1)}: ${obj[key][0]}`;
+                            if (typeof obj[key] === 'object' && obj[key] !== null) return getFirstError(obj[key]);
+                            return `${key}: ${obj[key]}`;
+                        }
+                        return message;
+                    };
+                    message = getFirstError(data);
+                }
+            }
             toast.error(message);
         } finally {
             setLoading(false);
