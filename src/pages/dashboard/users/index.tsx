@@ -4,6 +4,7 @@ import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { UsersService } from '../../../services/users.service';
 import UserModal from '../../../components/dashboard/users/UserModal';
 import PasswordGeneratorModal from '../../../components/dashboard/users/PasswordGeneratorModal';
+import api from '../../../services/api';
 
 export default function UsersPage() {
     const [activeTab, setActiveTab] = useState<'students' | 'teachers' | 'staff'>('students');
@@ -207,6 +208,21 @@ export default function UsersPage() {
                                             </div>
                                         </td>
                                         <td className="p-4 text-right">
+                                            <button
+                                                onClick={async () => {
+                                                    if (confirm(`Are you sure you want to reset the password for ${user.user?.username}? They will be emailed a new temporary password.`)) {
+                                                        try {
+                                                            const response = await api.post(`/users/${user.user?.id}/generate-password/`);
+                                                            toast.success('Password reset successfully and emailed to user!');
+                                                        } catch (error) {
+                                                            toast.error('Failed to reset password.');
+                                                        }
+                                                    }
+                                                }}
+                                                className="text-yellow-400 hover:text-yellow-300 mr-3"
+                                            >
+                                                Reset PWD
+                                            </button>
                                             <button
                                                 onClick={() => handleEditClick(user)}
                                                 className="text-primary-400 hover:text-primary-300 mr-3"
