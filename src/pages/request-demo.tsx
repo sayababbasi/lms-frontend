@@ -29,7 +29,7 @@ export default function RequestDemo() {
 
         try {
             // Using the existing register endpoint which creates inactive users by default
-            await axios.post('http://localhost:8000/api/register/', {
+            await axios.post(`${process.env.API_URL || 'http://localhost:8000/api'}/register/`, {
                 username: formData.email.split('@')[0] + Math.floor(Math.random() * 1000), // Generate username from email
                 email: formData.email,
                 password: formData.password,

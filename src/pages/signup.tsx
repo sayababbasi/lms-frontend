@@ -6,7 +6,7 @@ import { User, Mail, Lock, Phone, UserCircle, ArrowRight, CheckCircle2, ChevronL
 import axios from 'axios';
 import { toast, Toaster } from 'react-hot-toast';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = process.env.API_URL || 'http://localhost:8000/api';
 
 const Signup = () => {
     const router = useRouter();

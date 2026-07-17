@@ -4,7 +4,7 @@ import { FinanceService, PaymentProof } from '../../../services/finance.service'
 import { CheckCircle, XCircle, Eye, Clock, User, DollarSign, FileText, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = process.env.API_URL ? process.env.API_URL.replace('/api', '') : 'http://localhost:8000';
 
 const getImageUrl = (url: string) => {
     if (!url) return '';

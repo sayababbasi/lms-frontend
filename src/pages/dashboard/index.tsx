@@ -39,7 +39,7 @@ export default function DashboardHome() {
         try {
             const token = localStorage.getItem('access_token');
             // Assuming localhost:8000 for now, ideally should use env var or service
-            const response = await axios.get('http://localhost:8000/api/pending-users/', {
+            const response = await axios.get(`${process.env.API_URL || 'http://localhost:8000/api'}/pending-users/`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPendingUsers(response.data as any);
@@ -51,7 +51,7 @@ export default function DashboardHome() {
     const handleApproveUser = async (id: number) => {
         try {
             const token = localStorage.getItem('access_token');
-            await axios.post(`http://localhost:8000/api/approve-user/${id}/`, {}, {
+            await axios.post(`${process.env.API_URL || 'http://localhost:8000/api'}/approve-user/${id}/`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success("User approved successfully");

@@ -4,7 +4,7 @@ import { FinanceService, FeeChallan, FinanceSummary, PaymentProof } from '../../
 import { DollarSign, Download, Upload, CheckCircle, XCircle, Clock, AlertTriangle, CreditCard, FileText, ChevronRight, Eye, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = process.env.API_URL ? process.env.API_URL.replace('/api', '') : 'http://localhost:8000';
 
 export default function StudentFinancePage() {
     const [challans, setChallans] = useState<FeeChallan[]>([]);
