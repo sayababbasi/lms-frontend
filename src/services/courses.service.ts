@@ -31,9 +31,25 @@ export const CoursesService = {
         formData.append('lessonId', lessonId.toString());
         formData.append('video', videoFile);
         
-        // Remove explicit Content-Type so Axios auto-generates the boundary string!
-        const response = await api.post('/youtube/upload/', formData);
-        return response.data;
+        // Use native fetch to bypass Axios global headers entirely
+        const token = localStorage.getItem('access_token');
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        
+        const res = await fetch(`${baseUrl}/youtube/upload/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+                // DO NOT set Content-Type here; fetch generates it with the boundary automatically
+            },
+            body: formData
+        });
+        
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Failed to upload video');
+        }
+        
+        return res.json();
     },
 
     uploadResource: async (lessonId: number, file: File) => {
@@ -41,8 +57,26 @@ export const CoursesService = {
         formData.append('lesson_id', lessonId.toString());
         formData.append('file', file);
         formData.append('title', file.name); // Default title to filename
-        const response = await api.post('/resources/', formData);
-        return response.data;
+        
+        // Use native fetch to bypass Axios global headers entirely
+        const token = localStorage.getItem('access_token');
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        
+        const res = await fetch(`${baseUrl}/resources/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+                // DO NOT set Content-Type here; fetch generates it with the boundary automatically
+            },
+            body: formData
+        });
+        
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Failed to upload resource');
+        }
+        
+        return res.json();
     },
 
     create: async (data: any) => {
