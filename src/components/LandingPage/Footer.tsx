@@ -8,12 +8,13 @@ const Footer = () => {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
                     <div>
-                        <div className="mb-6">
+                        <div className="mb-6 flex items-center gap-2">
                             <img
                                 src="/branding/revoticai-new-logo-for-dark-theme.png"
                                 alt="Revotic LMS"
                                 className="h-10 w-auto"
                             />
+                            <span className="text-2xl font-bold text-white tracking-tight">LMS</span>
                         </div>
                         <p className="mb-6 leading-relaxed">
                             Empowering education through technology. Join us in shaping the future of learning.

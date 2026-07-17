@@ -35,6 +35,7 @@ const Header = () => {
                         alt="Revotic Logo"
                         className="h-10 w-auto"
                     />
+                    <span className="text-2xl font-bold text-slate-800 tracking-tight">LMS</span>
                 </Link>
 
                 {/* Desktop Navigation */}

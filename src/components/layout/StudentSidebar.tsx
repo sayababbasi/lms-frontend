@@ -34,15 +34,16 @@ export default function StudentSidebar({ isOpen, setIsOpen }: { isOpen: boolean,
                     {/* Logo Section - Premium Enhanced */}
                     <div className="h-20 flex flex-col justify-center px-6 border-b border-dark-border bg-gradient-to-b from-dark-surface to-dark-surface/50 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-20 bg-primary-600/5 blur-[60px] rounded-full pointer-events-none -mr-16 -mt-10"></div>
-                        <Link href="/student/dashboard" className="flex items-center group transition-all duration-300 relative z-10">
+                        <Link href="/student/dashboard" className="flex items-center gap-2 group transition-all duration-300 relative z-10">
                             <img
                                 src={theme === 'dark'
                                     ? "/branding/revoticai-new-logo-for-dark-theme.png"
                                     : "/branding/revoticai-new-logo-for-light-theme.png"
                                 }
                                 alt="Revotic AI Logo"
-                                className="h-7 w-auto object-contain transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
+                                className={`h-7 w-auto object-contain transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(37,99,235,0.3)]`}
                             />
+                            <span className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">LMS</span>
                         </Link>
                         <div className="mt-1 flex items-center gap-1.5 relative z-10">
                             <span className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse"></span>
