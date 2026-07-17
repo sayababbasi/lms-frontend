@@ -88,6 +88,8 @@ export default function TeacherCourseManage() {
     const [addingLessonToModule, setAddingLessonToModule] = useState<number | null>(null);
     const [newLessonTitle, setNewLessonTitle] = useState("");
     const [uploadingLessonId, setUploadingLessonId] = useState<number | null>(null);
+    const [linkingVideoId, setLinkingVideoId] = useState<number | null>(null);
+    const [youtubeUrlInput, setYoutubeUrlInput] = useState('');
     const [uploadingResourceId, setUploadingResourceId] = useState<number | null>(null);
     const [deletingLessonId, setDeletingLessonId] = useState<number | null>(null);
     const [deletingModuleId, setDeletingModuleId] = useState<number | null>(null);
@@ -150,6 +152,33 @@ export default function TeacherCourseManage() {
             toast.error("Failed to create lesson");
         } finally {
             setSaving(false);
+        }
+    };
+
+    
+    const handleLinkYouTube = async (lessonId: number) => {
+        if (!youtubeUrlInput.trim()) return;
+        setUploadingLessonId(lessonId); // Reusing this for loading state
+        try {
+            // Extract video ID
+            let videoId = youtubeUrlInput;
+            const match = youtubeUrlInput.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|.*embed\/))([^&?\s]+)/);
+            if (match && match[1]) {
+                videoId = match[1];
+            }
+            // Send PATCH request to /api/lessons/{id}/
+            await api.patch(`/lessons/${lessonId}/`, { 
+                youtube_video_id: videoId, 
+                upload_status: 'completed' 
+            });
+            toast.success('YouTube video linked successfully!');
+            setLinkingVideoId(null);
+            setYoutubeUrlInput('');
+            fetchData();
+        } catch {
+            toast.error('Failed to link video');
+        } finally {
+            setUploadingLessonId(null);
         }
     };
 
@@ -1023,22 +1052,46 @@ export default function TeacherCourseManage() {
                                                     {/* Action Buttons */}
                                                     <div className="mt-3 flex items-center gap-3">
                                                         {!lesson.youtube_video_id && (
-                                                            <label className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium border flex items-center gap-2 transition-all ${uploadingLessonId === lesson.id ? 'bg-primary-100 dark:bg-primary-900/50 border-primary-300 dark:border-primary-500/30 text-primary-600 dark:text-primary-300 cursor-not-allowed' : 'bg-dark-surface border-dark-border text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-border'}`}>
-                                                                {uploadingLessonId === lesson.id ? (
-                                                                    <>
-                                                                       <svg className="animate-spin w-4 h-4 text-primary-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                                                       Uploading to YouTube...
-                                                                    </>
+                                                            <div className="flex flex-col gap-2">
+                                                                {linkingVideoId === lesson.id ? (
+                                                                    <div className="flex items-center gap-2">
+                                                                        <input 
+                                                                            type="text" 
+                                                                            placeholder="Paste YouTube URL..." 
+                                                                            className="bg-dark-bg border border-dark-border rounded px-3 py-2 text-sm text-dark-text focus:border-primary-500 focus:outline-none"
+                                                                            value={youtubeUrlInput}
+                                                                            onChange={e => setYoutubeUrlInput(e.target.value)}
+                                                                            autoFocus
+                                                                        />
+                                                                        <button onClick={() => handleLinkYouTube(lesson.id)} disabled={uploadingLessonId === lesson.id} className="px-3 py-2 bg-primary-600 text-white rounded text-sm font-medium hover:bg-primary-500 transition-colors">Save</button>
+                                                                        <button onClick={() => { setLinkingVideoId(null); setYoutubeUrlInput(''); }} className="px-3 py-2 border border-dark-border text-slate-400 rounded text-sm font-medium hover:bg-slate-800 transition-colors">Cancel</button>
+                                                                    </div>
                                                                 ) : (
-                                                                    <>
-                                                                        <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-                                                                        Upload Video
-                                                                        <input type="file" accept="video/mp4,video/x-m4v,video/*" className="hidden" onChange={(e) => {
-                                                                            if (e.target.files && e.target.files[0]) handleVideoUpload(lesson.id, e.target.files[0]);
-                                                                        }} disabled={uploadingLessonId === lesson.id} />
-                                                                    </>
+                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                        <button onClick={() => setLinkingVideoId(lesson.id)} className={`px-4 py-2 rounded-lg text-sm font-medium border flex items-center gap-2 transition-all bg-dark-surface border-dark-border text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-border`}>
+                                                                            <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                                                                            Link YouTube Video
+                                                                        </button>
+                                                                        <span className="text-xs text-slate-500 font-medium px-1">OR</span>
+                                                                        <label className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium border flex items-center gap-2 transition-all ${uploadingLessonId === lesson.id ? 'bg-primary-100 dark:bg-primary-900/50 border-primary-300 dark:border-primary-500/30 text-primary-600 dark:text-primary-300 cursor-not-allowed' : 'bg-dark-surface border-dark-border text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-border'}`}>
+                                                                            {uploadingLessonId === lesson.id ? (
+                                                                                <>
+                                                                                   <svg className="animate-spin w-4 h-4 text-primary-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                                                   Uploading...
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                                                                                    Upload MP4
+                                                                                    <input type="file" accept="video/mp4,video/x-m4v,video/*" className="hidden" onChange={(e) => {
+                                                                                        if (e.target.files && e.target.files[0]) handleVideoUpload(lesson.id, e.target.files[0]);
+                                                                                    }} disabled={uploadingLessonId === lesson.id} />
+                                                                                </>
+                                                                            )}
+                                                                        </label>
+                                                                    </div>
                                                                 )}
-                                                            </label>
+                                                            </div>
                                                         )}
 
                                                         <label className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium border flex items-center gap-2 transition-all ${uploadingResourceId === lesson.id ? 'bg-primary-100 dark:bg-primary-900/50 border-primary-300 dark:border-primary-500/30 text-primary-600 dark:text-primary-300 cursor-not-allowed' : 'bg-dark-surface border-dark-border text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-border'}`}>
