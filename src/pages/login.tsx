@@ -17,6 +17,11 @@ export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
+        // Clear any stale tokens on login page load so a cached session
+        // cannot bypass the login form or misroute to a wrong portal.
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+
         const savedUsername = localStorage.getItem('rememberMe_username');
         if (savedUsername) {
             setFormData(prev => ({ ...prev, username: savedUsername }));
@@ -54,12 +59,16 @@ export default function Login() {
                     const redirectPath = router.query.redirect as string;
                     if (redirectPath) {
                         router.push(redirectPath);
+                    } else if (user.is_staff || user.is_superuser || user.role === 'admin') {
+                        // Admin check MUST come first — an admin may also have
+                        // is_teacher=true, so checking teacher first would misroute them.
+                        router.push('/dashboard');
                     } else if (user.is_student) {
                         router.push('/student/dashboard');
                     } else if (user.is_teacher) {
                         router.push('/teacher/dashboard');
                     } else {
-                        // Admin or Default
+                        // Fallback for unknown roles
                         router.push('/dashboard');
                     }
                 } else {
@@ -71,8 +80,23 @@ export default function Login() {
             }
         } catch (err: any) {
             console.error("Login error:", err);
-            const msg = err.response?.data?.detail || err.message || 'Login failed';
-            setError(`Login failed: ${msg}`);
+            const responseData = err.response?.data;
+            const errorCode = responseData?.code;
+            const errorDetail = responseData?.detail;
+
+            if (errorCode === 'user_not_found' || (typeof errorDetail === 'string' && errorDetail.toLowerCase().includes('no account'))) {
+                setError('Username or email address not found. Please check and try again.');
+            } else if (errorCode === 'wrong_password' || (typeof errorDetail === 'string' && errorDetail.toLowerCase().includes('incorrect password'))) {
+                setError('Incorrect password. Please check your password and try again.');
+            } else if (errorCode === 'account_locked' || (typeof errorDetail === 'string' && errorDetail.toLowerCase().includes('locked'))) {
+                setError('Your account is locked due to too many failed attempts. Please try again later.');
+            } else if (typeof errorDetail === 'string') {
+                setError(errorDetail);
+            } else if (err.message === 'Network Error') {
+                setError('Cannot connect to server. Please check your internet connection.');
+            } else {
+                setError('Login failed. Please check your credentials and try again.');
+            }
             setLoading(false);
         }
     };

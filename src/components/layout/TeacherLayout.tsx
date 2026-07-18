@@ -25,14 +25,20 @@ export default function TeacherLayout({ children, title }: TeacherLayoutProps) {
 
             try {
                 const user = await AuthService.getCurrentUser();
-                // Check if user is a teacher
-                // Assuming the backend returns role='teacher' or is_teacher=true
-                // Adjust this condition based on your actual API response structure
-                if (user && ((user as any).role === 'teacher' || (user as any).is_teacher)) {
+                if (!user) {
+                    router.push('/login');
+                    return;
+                }
+                const u = user as any;
+                // Admins must be excluded even if they also have is_teacher=true
+                const isAdmin = u.is_staff || u.is_superuser || u.role === 'admin';
+                const isTeacher = (u.role === 'teacher' || u.is_teacher) && !isAdmin;
+                if (isTeacher) {
                     setAuthorized(true);
+                } else if (isAdmin) {
+                    // Admin accidentally landed on teacher portal — send to admin dashboard
+                    router.push('/dashboard');
                 } else {
-                    // Not authorized (not a teacher)
-                    // Redirect to login or unauthorized page
                     router.push('/login');
                 }
             } catch (error) {

@@ -25,12 +25,21 @@ export default function StudentLayout({ children, title }: StudentLayoutProps) {
 
             try {
                 const user = await AuthService.getCurrentUser();
-                // Check if user is a student
-                if (user && (user as any).role === 'student') {
+                if (!user) {
+                    router.push('/login');
+                    return;
+                }
+                const u = user as any;
+                const isAdmin = u.is_staff || u.is_superuser || u.role === 'admin';
+                const isTeacher = (u.role === 'teacher' || u.is_teacher) && !isAdmin;
+                const isStudent = u.role === 'student' || u.is_student;
+                if (isStudent && !isAdmin && !isTeacher) {
                     setAuthorized(true);
+                } else if (isAdmin) {
+                    router.push('/dashboard');
+                } else if (isTeacher) {
+                    router.push('/teacher/dashboard');
                 } else {
-                    // Not authorized (not a student)
-                    // If admin, maybe redirect to admin dashboard? For now, just login.
                     router.push('/login');
                 }
             } catch (error) {
