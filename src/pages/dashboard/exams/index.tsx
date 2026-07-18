@@ -167,8 +167,7 @@ export default function ExamsPage() {
         try {
             const data = await ExamsService.generateAdmitCard(examId);
             setAdmitCards(prev => ({ ...prev, [examId]: (data as any).admit_card }));
-            toast.success("Admit Card Generated!");
-            alert(`Admit Card Issued: ${(data as any).admit_card.unique_code}`);
+            toast.success(`Admit Card Issued: ${(data as any).admit_card.unique_code}`);
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Failed to generate admit card");
         }
@@ -466,7 +465,7 @@ export default function ExamsPage() {
 
                                                             {admitCards[exam.id] && (
                                                                 <button
-                                                                    onClick={() => alert(`Code: ${admitCards[exam.id].unique_code}`)}
+                                                                    onClick={() => toast.success(`Code: ${admitCards[exam.id].unique_code}`)}
                                                                     className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20 hover:bg-green-500/20 transition-colors text-sm font-medium"
                                                                 >
                                                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>

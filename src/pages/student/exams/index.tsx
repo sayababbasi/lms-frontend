@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 import StudentLayout from '../../../components/layout/StudentLayout';
 import { StudentService } from '../../../services/student.service';
 import { FileText, Clock, AlertCircle, CheckCircle, ChevronRight, Play } from 'lucide-react';
@@ -44,7 +45,7 @@ export default function StudentExamsPage() {
             // Or we can use a library for state, but let's stick to simple routing.
             router.push(`/student/exams/${examId}/attempt`);
         } catch (error) {
-            alert("Failed to start exam. " + ((error as any).response?.data?.error || ""));
+            toast.error("Failed to start exam. " + ((error as any).response?.data?.error || ""));
         }
     };
 

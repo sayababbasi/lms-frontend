@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { FinanceService } from '../../../services/finance.service';
 import { useRouter } from 'next/router';
+import toast from 'react-hot-toast';
 
 export default function FinancePage() {
     const router = useRouter();
@@ -240,7 +241,7 @@ export default function FinancePage() {
             setChallans(prev => prev.map(c => c.id === challanId ? { ...c, paid: newStatus } : c));
         } catch (error) {
             console.error("Failed to update challan status", error);
-            alert("Failed to update payment status");
+            toast.error("Failed to update payment status");
         }
     };
 
