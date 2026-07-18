@@ -1,7 +1,8 @@
 import { useRouter } from 'next/router';
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog, Transition, Combobox } from '@headlessui/react';
 import ConfirmModal from '@/components/ui/ConfirmModal';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
+import { Search, ChevronDown, Check, UserPlus, User, Mail, Hash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../../services/api';
 import DashboardLayout from '../../../../components/layout/DashboardLayout';
@@ -84,6 +85,7 @@ export default function CourseHubPage() {
     const [enrollmentRequests, setEnrollmentRequests] = useState<any[]>([]);
     const [allStudents, setAllStudents] = useState<any[]>([]);
     const [enrollmentLoading, setEnrollmentLoading] = useState(false);
+    const [enrollSearchQuery, setEnrollSearchQuery] = useState('');
     const [enrollStudentId, setEnrollStudentId] = useState("");
 
     // Exams State
@@ -781,29 +783,115 @@ export default function CourseHubPage() {
                     {activeTab === 'enrollment' && (
                         <div className="space-y-6">
                             {/* 1. Add Student */}
-                            <div className="bg-dark-card rounded-xl p-6 border border-dark-border">
-                                <h3 className="text-lg font-bold text-dark-text mb-4">Enroll New Student</h3>
-                                <div className="flex gap-4">
-                                    <select
-                                        value={enrollStudentId}
-                                        onChange={(e) => setEnrollStudentId(e.target.value)}
-                                        className="flex-1 bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-dark-text focus:outline-none focus:border-primary-500"
-                                    >
-                                        <option value="">Select a student...</option>
-                                        {allStudents
-                                            .filter(s => !course.students?.some((enrolled: any) => enrolled.user.id === s.user.id))
-                                            .map((student: any) => (
-                                                <option key={student.id} value={student.user.id}>
-                                                    {student.user.first_name} {student.user.last_name} ({student.roll_number})
-                                                </option>
-                                            ))}
-                                    </select>
+                            <div className="bg-white dark:bg-dark-card rounded-xl p-6 border border-slate-200 dark:border-dark-border shadow-sm">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400">
+                                        <UserPlus className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-800 dark:text-dark-text">Enroll New Student</h3>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">Search and manually add students to this course.</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <div className="flex-1 relative z-20">
+                                        <Combobox value={enrollStudentId} onChange={setEnrollStudentId}>
+                                            <div className="relative">
+                                                <div className="relative w-full cursor-default overflow-hidden rounded-xl bg-slate-50 dark:bg-dark-bg border border-slate-300 dark:border-dark-border text-left focus-within:ring-2 focus-within:ring-primary-500/50 focus-within:border-primary-500 transition-all flex items-center h-[46px]">
+                                                    <Search className="w-5 h-5 text-slate-400 ml-3 shrink-0" />
+                                                    <Combobox.Input
+                                                        className="w-full border-none py-2.5 pl-3 pr-10 text-sm leading-5 text-slate-800 dark:text-dark-text bg-transparent focus:ring-0 outline-none"
+                                                        displayValue={(studentId: string) => {
+                                                            const student = allStudents.find(s => s.user.id.toString() === studentId?.toString());
+                                                            return student ? `${student.user.first_name} ${student.user.last_name} (${student.roll_number})` : '';
+                                                        }}
+                                                        onChange={(event) => setEnrollSearchQuery(event.target.value)}
+                                                        placeholder="Search by name, roll number, or email..."
+                                                    />
+                                                    <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                                        <ChevronDown className="h-5 w-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" aria-hidden="true" />
+                                                    </Combobox.Button>
+                                                </div>
+                                                <Transition
+                                                    as={Fragment}
+                                                    leave="transition ease-in duration-100"
+                                                    leaveFrom="opacity-100"
+                                                    leaveTo="opacity-0"
+                                                    afterLeave={() => setEnrollSearchQuery('')}
+                                                >
+                                                    <Combobox.Options className="absolute mt-2 max-h-72 w-full overflow-auto rounded-xl bg-white dark:bg-dark-surface border border-slate-200 dark:border-dark-border py-2 shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-50">
+                                                        {allStudents.filter(s => !course.students?.some((enrolled: any) => enrolled.user.id === s.user.id))
+                                                            .filter(student => {
+                                                                if (enrollSearchQuery === '') return true;
+                                                                const query = enrollSearchQuery.toLowerCase();
+                                                                return `${student.user.first_name} ${student.user.last_name}`.toLowerCase().includes(query) || 
+                                                                       student.user.email.toLowerCase().includes(query) ||
+                                                                       student.roll_number.toLowerCase().includes(query);
+                                                            }).length === 0 && enrollSearchQuery !== '' ? (
+                                                            <div className="relative cursor-default select-none py-4 px-6 text-slate-500 text-center flex flex-col items-center">
+                                                                <User className="w-8 h-8 mb-2 text-slate-300" />
+                                                                No students found matching your search.
+                                                            </div>
+                                                        ) : (
+                                                            allStudents.filter(s => !course.students?.some((enrolled: any) => enrolled.user.id === s.user.id))
+                                                                .filter(student => {
+                                                                    if (enrollSearchQuery === '') return true;
+                                                                    const query = enrollSearchQuery.toLowerCase();
+                                                                    return `${student.user.first_name} ${student.user.last_name}`.toLowerCase().includes(query) || 
+                                                                           student.user.email.toLowerCase().includes(query) ||
+                                                                           student.roll_number.toLowerCase().includes(query);
+                                                                })
+                                                                .map((student) => (
+                                                                <Combobox.Option
+                                                                    key={student.id}
+                                                                    className={({ active }) =>
+                                                                        `relative cursor-default select-none py-3 px-4 ${
+                                                                            active ? 'bg-primary-50 dark:bg-primary-900/20' : ''
+                                                                        }`
+                                                                    }
+                                                                    value={student.user.id}
+                                                                >
+                                                                    {({ selected, active }) => (
+                                                                        <div className="flex items-center justify-between">
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${active ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>
+                                                                                    {student.user.first_name[0]}{student.user.last_name[0]}
+                                                                                </div>
+                                                                                <div className="flex flex-col">
+                                                                                    <span className={`block truncate ${selected ? 'font-bold text-primary-600 dark:text-primary-400' : 'font-semibold text-slate-800 dark:text-slate-200'}`}>
+                                                                                        {student.user.first_name} {student.user.last_name}
+                                                                                    </span>
+                                                                                    <div className="flex items-center gap-3 mt-1">
+                                                                                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                                                                                            <Mail className="w-3 h-3" /> {student.user.email}
+                                                                                        </span>
+                                                                                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                                                                                            <Hash className="w-3 h-3" /> {student.roll_number}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            {selected && (
+                                                                                <span className="flex items-center justify-center text-primary-600 dark:text-primary-400 w-6 h-6 bg-primary-100 dark:bg-primary-900/50 rounded-full">
+                                                                                    <Check className="h-4 w-4" aria-hidden="true" />
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </Combobox.Option>
+                                                            ))
+                                                        )}
+                                                    </Combobox.Options>
+                                                </Transition>
+                                            </div>
+                                        </Combobox>
+                                    </div>
                                     <button
                                         onClick={handleEnrollStudent}
                                         disabled={!enrollStudentId}
-                                        className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="h-[46px] bg-primary-600 hover:bg-primary-500 text-white px-8 rounded-xl font-semibold shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm transition-all flex items-center gap-2"
                                     >
-                                        Enroll
+                                        <UserPlus className="w-4 h-4" /> Enroll
                                     </button>
                                 </div>
                             </div>
