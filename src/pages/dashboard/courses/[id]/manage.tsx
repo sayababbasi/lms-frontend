@@ -1,7 +1,9 @@
-
 import { useRouter } from 'next/router';
+import { Dialog, Transition } from '@headlessui/react';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import api from '../../../../services/api';
 import DashboardLayout from '../../../../components/layout/DashboardLayout';
 import { CoursesService } from '../../../../services/courses.service';
 import { UsersService } from '../../../../services/users.service';
@@ -52,6 +54,23 @@ export default function CourseHubPage() {
     const [teachers, setTeachers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    
+    // Confirm Modal State
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        description: string;
+        confirmText: string;
+        onConfirm: () => void;
+    }>({
+        isOpen: false,
+        title: '',
+        description: '',
+        confirmText: 'Confirm',
+        onConfirm: () => {}
+    });
+
+    const closeConfirm = () => setConfirmModal(prev => ({ ...prev, isOpen: false }));
     const [selectedTeacherIds, setSelectedTeacherIds] = useState<number[]>([]);
     const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -198,60 +217,88 @@ export default function CourseHubPage() {
 
 
 
-    const handleDeleteVideo = async (lessonId: number) => {
-        if (!confirm('Remove this video? You can upload a new one after.')) return;
-        setDeletingVideoId(lessonId);
-        try {
-            await CoursesService.deleteVideo(lessonId);
-            toast.success('Video removed. Upload a new one now.');
-            fetchData();
-        } catch {
-            toast.error('Failed to remove video');
-        } finally {
-            setDeletingVideoId(null);
-        }
+    const handleDeleteVideo = (lessonId: number) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Remove Video',
+            description: 'Remove this video? You can upload a new one after.',
+            confirmText: 'Remove',
+            onConfirm: async () => {
+                setDeletingVideoId(lessonId);
+                try {
+                    await CoursesService.deleteVideo(lessonId);
+                    toast.success('Video removed. Upload a new one now.');
+                    fetchData();
+                } catch {
+                    toast.error('Failed to remove video');
+                } finally {
+                    setDeletingVideoId(null);
+                }
+            }
+        });
     };
 
-    const handleDeleteResource = async (resourceId: number) => {
-        if (!confirm('Delete this resource file?')) return;
-        setDeletingResourceId(resourceId);
-        try {
-            await CoursesService.deleteResource(resourceId);
-            toast.success('Resource deleted');
-            fetchData();
-        } catch {
-            toast.error('Failed to delete resource');
-        } finally {
-            setDeletingResourceId(null);
-        }
+    const handleDeleteResource = (resourceId: number) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Resource',
+            description: 'Delete this resource file?',
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                setDeletingResourceId(resourceId);
+                try {
+                    await CoursesService.deleteResource(resourceId);
+                    toast.success('Resource deleted');
+                    fetchData();
+                } catch {
+                    toast.error('Failed to delete resource');
+                } finally {
+                    setDeletingResourceId(null);
+                }
+            }
+        });
     };
 
-    const handleDeleteLesson = async (lessonId: number) => {
-        if (!confirm('Delete this lesson and all its content?')) return;
-        setDeletingLessonId(lessonId);
-        try {
-            await CoursesService.deleteLesson(lessonId);
-            toast.success('Lesson deleted');
-            fetchData();
-        } catch {
-            toast.error('Failed to delete lesson');
-        } finally {
-            setDeletingLessonId(null);
-        }
+    const handleDeleteLesson = (lessonId: number) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Lesson',
+            description: 'Delete this lesson and all its content?',
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                setDeletingLessonId(lessonId);
+                try {
+                    await CoursesService.deleteLesson(lessonId);
+                    toast.success('Lesson deleted');
+                    fetchData();
+                } catch {
+                    toast.error('Failed to delete lesson');
+                } finally {
+                    setDeletingLessonId(null);
+                }
+            }
+        });
     };
 
-    const handleDeleteModule = async (moduleId: number) => {
-        if (!confirm('Delete this module and ALL its lessons? This cannot be undone.')) return;
-        setDeletingModuleId(moduleId);
-        try {
-            await CoursesService.deleteModule(moduleId);
-            toast.success('Module deleted');
-            fetchData();
-        } catch {
-            toast.error('Failed to delete module');
-        } finally {
-            setDeletingModuleId(null);
-        }
+    const handleDeleteModule = (moduleId: number) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Module',
+            description: 'Delete this module and ALL its lessons? This cannot be undone.',
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                setDeletingModuleId(moduleId);
+                try {
+                    await CoursesService.deleteModule(moduleId);
+                    toast.success('Module deleted');
+                    fetchData();
+                } catch {
+                    toast.error('Failed to delete module');
+                } finally {
+                    setDeletingModuleId(null);
+                }
+            }
+        });
     };
 
     const handleUpdateModuleTitle = async (moduleId: number) => {
@@ -453,15 +500,22 @@ export default function CourseHubPage() {
         }
     };
 
-    const handleRemoveStudentFromCourse = async (studentId: number) => {
-        if (!confirm("Are you sure you want to remove this student from the course?")) return;
-        try {
-            await CoursesService.removeStudent(Number(id), studentId);
-            toast.success("Student removed from course");
-            fetchData(); // Refresh course students list
-        } catch (error) {
-            toast.error("Failed to remove student");
-        }
+    const handleRemoveStudent = (studentId: number) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Remove Student',
+            description: 'Are you sure you want to remove this student from the course?',
+            confirmText: 'Remove',
+            onConfirm: async () => {
+                try {
+                    await CoursesService.removeStudent(Number(id), studentId);
+                    toast.success('Student removed from course');
+                    fetchData();
+                } catch {
+                    toast.error('Failed to remove student');
+                }
+            }
+        });
     };
 
     const handleEnrollStudent = async () => {
@@ -548,6 +602,7 @@ export default function CourseHubPage() {
     if (!course) return null;
 
     return (
+        <>
         <DashboardLayout title={course.title}>
             <div className="space-y-6">
                 {/* Header */}
@@ -820,7 +875,7 @@ export default function CourseHubPage() {
                                                         </td>
                                                         <td className="py-3 px-4 text-right">
                                                             <button
-                                                                onClick={() => handleRemoveStudentFromCourse(student.user.id)}
+                                                                onClick={() => handleRemoveStudent(student.user.id)}
                                                                 className="text-red-400 hover:text-red-300 text-sm font-medium"
                                                             >
                                                                 Remove
@@ -1271,20 +1326,90 @@ export default function CourseHubPage() {
                             {course?.modules?.map((module: any, index: number) => (
                                 <div key={module.id} className="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
                                     <div className="bg-dark-surface px-6 py-4 border-b border-dark-border flex justify-between items-center">
-                                        <h4 className="font-bold text-dark-text text-lg">Module {index + 1}: {module.title}</h4>
-                                        <button onClick={() => setAddingLessonToModule(module.id)} className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-1">
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg> Add Lesson
-                                        </button>
+                                        {editingModuleId === module.id ? (
+                                            <div className="flex items-center gap-2 flex-1 mr-3">
+                                                <input
+                                                    type="text"
+                                                    value={editModuleTitle}
+                                                    onChange={e => setEditModuleTitle(e.target.value)}
+                                                    onKeyDown={e => { if (e.key === 'Enter') handleUpdateModuleTitle(module.id); if (e.key === 'Escape') setEditingModuleId(null); }}
+                                                    className="flex-1 bg-dark-bg border border-primary-500/50 rounded-lg px-3 py-1.5 text-dark-text text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                                                    autoFocus
+                                                />
+                                                <button onClick={() => handleUpdateModuleTitle(module.id)} disabled={saving} className="px-3 py-1.5 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-500 transition-colors shadow-sm">Save</button>
+                                                <button onClick={() => setEditingModuleId(null)} className="px-3 py-1.5 border border-dark-border text-slate-300 hover:bg-white/5 text-sm font-medium rounded-lg transition-colors">Cancel</button>
+                                            </div>
+                                        ) : (
+                                            <h4 className="font-bold text-dark-text text-lg">Module {index + 1}: {module.title}</h4>
+                                        )}
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => { setEditingModuleId(module.id); setEditModuleTitle(module.title); }}
+                                                title="Rename module"
+                                                className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-500/10 rounded-lg transition-all"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                            </button>
+                                            <button onClick={() => setAddingLessonToModule(module.id)} className="text-sm text-primary-400 hover:text-primary-300 flex items-center gap-1 font-medium bg-primary-900/20 hover:bg-primary-900/40 px-3 py-1.5 rounded-lg transition-all">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg> Add Lesson
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteModule(module.id)}
+                                                disabled={deletingModuleId === module.id}
+                                                title="Delete module"
+                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                            >
+                                                {deletingModuleId === module.id
+                                                    ? <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                    : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                }
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="p-4 space-y-3">
                                         {module.lessons?.map((lesson: any, lIndex: number) => (
-                                            <div key={lesson.id} className="bg-dark-bg border border-dark-border p-4 rounded-lg flex flex-col md:flex-row gap-4 justify-between group">
+                                            <div key={lesson.id} className="bg-dark-bg border border-dark-border p-5 rounded-xl flex flex-col gap-4 group">
+                                                <div className="flex justify-between items-start w-full">
+                                                    {editingLessonId === lesson.id ? (
+                                                        <div className="flex items-center gap-2 flex-1 max-w-lg mr-4">
+                                                            <input
+                                                                type="text"
+                                                                value={editLessonTitle}
+                                                                onChange={e => setEditLessonTitle(e.target.value)}
+                                                                onKeyDown={e => { if (e.key === 'Enter') handleUpdateLessonTitle(lesson.id); if (e.key === 'Escape') setEditingLessonId(null); }}
+                                                                className="flex-1 bg-dark-surface border border-primary-500/50 rounded-lg px-3 py-1.5 text-dark-text text-sm focus:outline-none focus:border-primary-500"
+                                                                autoFocus
+                                                            />
+                                                            <button onClick={() => handleUpdateLessonTitle(lesson.id)} disabled={saving} className="px-3 py-1.5 bg-primary-600 text-white text-xs font-medium rounded-lg shadow-sm hover:bg-primary-500 transition-colors">Save</button>
+                                                            <button onClick={() => setEditingLessonId(null)} className="px-3 py-1.5 border border-dark-border text-slate-400 hover:bg-white/5 text-xs font-medium rounded-lg transition-colors">Cancel</button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-3">
+                                                            <h5 className="font-medium text-slate-200 text-base">Lecture {lIndex + 1}: {lesson.title}</h5>
+                                                            <button onClick={() => { setEditingLessonId(lesson.id); setEditLessonTitle(lesson.title); }} title="Rename lesson" className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-500/10 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+                                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <button onClick={() => handleDeleteLesson(lesson.id)} disabled={deletingLessonId === lesson.id} title="Delete lesson" className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+                                                        {deletingLessonId === lesson.id ? <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>}
+                                                    </button>
+                                                </div>
                                                 <div className="flex-1">
-                                                    <h5 className="font-medium text-slate-800 dark:text-slate-200">Lecture {lIndex + 1}: {lesson.title}</h5>
                                                     
                                                     {lesson.youtube_video_id && (
-                                                        <div className="mt-3 relative w-full rounded-lg overflow-hidden border border-dark-border aspect-video bg-black flex items-center justify-center">
+                                                        <div className="mt-3 relative w-full rounded-xl overflow-hidden border border-dark-border aspect-video bg-black shadow-sm group/video">
                                                             <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${lesson.youtube_video_id}?modestbranding=1&rel=0`} title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+                                                            <div className="absolute top-3 right-3 opacity-0 group-hover/video:opacity-100 transition-opacity">
+                                                                <button
+                                                                    onClick={() => handleDeleteVideo(lesson.id)}
+                                                                    disabled={deletingVideoId === lesson.id}
+                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/95 hover:bg-red-500 text-white text-sm rounded-lg font-medium backdrop-blur-sm shadow-xl border border-red-500/50 transition-colors"
+                                                                >
+                                                                    {deletingVideoId === lesson.id ? 'Removing...' : '✕ Remove Video'}
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     )}
 
@@ -1405,5 +1530,14 @@ export default function CourseHubPage() {
                 </div>
             </div>
         </DashboardLayout>
+        <ConfirmModal 
+            isOpen={confirmModal.isOpen} 
+            onClose={closeConfirm} 
+            onConfirm={confirmModal.onConfirm}
+            title={confirmModal.title}
+            description={confirmModal.description}
+            confirmText={confirmModal.confirmText}
+        />
+        </>
     );
 }
