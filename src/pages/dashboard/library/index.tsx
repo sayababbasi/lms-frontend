@@ -3,6 +3,13 @@ import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { LibraryService } from '../../../services/library.service';
 import toast from 'react-hot-toast';
 
+const getMediaUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api', '') : 'http://localhost:8000';
+    return `${baseUrl}${url}`;
+};
+
 export default function LibraryPage() {
     const [books, setBooks] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -117,7 +124,7 @@ export default function LibraryPage() {
                             <div className="h-56 bg-slate-800 relative overflow-hidden">
                                 {book.cover_image ? (
                                     <img
-                                        src={book.cover_image}
+                                        src={getMediaUrl(book.cover_image)}
                                         alt={book.title}
                                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                     />
@@ -129,7 +136,7 @@ export default function LibraryPage() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                                     {book.pdf_file ? (
                                         <a
-                                            href={book.pdf_file}
+                                            href={getMediaUrl(book.pdf_file)}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="w-full bg-primary-600 hover:bg-primary-500 text-white py-2 rounded-lg text-center text-sm font-medium shadow-lg"
