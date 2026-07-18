@@ -15,6 +15,9 @@ export const ExamService = {
         const response = await api.post('exams/', data);
         return response.data;
     },
+    deleteExam: async (id: number) => {
+        await api.delete(`exams/${id}/`);
+    },
 
     // Questions
     getQuestions: async (examId?: number) => {

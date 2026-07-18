@@ -121,38 +121,41 @@ export default function ExamModal({ isOpen, onClose, onSubmit, isLoading, initia
                                         {errors.course && <span className="text-red-400 text-xs">{errors.course.message as string}</span>}
                                     </div>
 
-                                    {/* Start Time */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Start Time</label>
-                                        <input
-                                            type="datetime-local"
-                                            {...register('start_time', { required: "Start Time is required" })}
-                                            className="mt-1 w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-dark-text focus:outline-none focus:border-primary-500 [color-scheme:dark]"
-                                        />
-                                        {errors.start_time && <span className="text-red-400 text-xs">{errors.start_time.message as string}</span>}
-                                    </div>
+                                    {/* Start & End Time Grid */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {/* Start Time */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Start Time</label>
+                                            <input
+                                                type="datetime-local"
+                                                {...register('start_time', { required: "Start Time is required" })}
+                                                className="mt-1 w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-dark-text focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 [color-scheme:dark]"
+                                            />
+                                            {errors.start_time && <span className="text-red-400 text-xs">{errors.start_time.message as string}</span>}
+                                        </div>
 
-                                    {/* End Time */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">End Time</label>
-                                        <input
-                                            type="datetime-local"
-                                            {...register('end_time', {
-                                                required: "End Time is required",
-                                                validate: (val) => {
-                                                    const start = watch('start_time');
-                                                    if (start && val < start) {
-                                                        return "End time cannot be before start time";
+                                        {/* End Time */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">End Time</label>
+                                            <input
+                                                type="datetime-local"
+                                                {...register('end_time', {
+                                                    required: "End Time is required",
+                                                    validate: (val) => {
+                                                        const start = watch('start_time');
+                                                        if (start && val < start) {
+                                                            return "End time cannot be before start time";
+                                                        }
+                                                        return true;
                                                     }
-                                                    return true;
-                                                }
-                                            })}
-                                            className="mt-1 w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-dark-text focus:outline-none focus:border-primary-500 [color-scheme:dark]"
-                                        />
-                                        {errors.end_time && <span className="text-red-400 text-xs">{errors.end_time.message as string}</span>}
+                                                })}
+                                                className="mt-1 w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-dark-text focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 [color-scheme:dark]"
+                                            />
+                                            {errors.end_time && <span className="text-red-400 text-xs">{errors.end_time.message as string}</span>}
+                                        </div>
                                     </div>
 
-                                    <div className="mt-6 flex justify-end gap-3">
+                                    <div className="flex justify-end gap-3 mt-6">
                                         <button
                                             type="button"
                                             className="px-4 py-2 text-slate-600 hover:text-dark-text hover:bg-white/5 rounded-lg transition-colors"

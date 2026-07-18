@@ -4,6 +4,7 @@ import Header from '../components/LandingPage/Header';
 import Footer from '../components/LandingPage/Footer';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
+import api from '../services/api';
 
 export default function ContactResult() {
     const [isLoading, setIsLoading] = useState(false);
@@ -22,12 +23,17 @@ export default function ContactResult() {
         e.preventDefault();
         setIsLoading(true);
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        toast.success("Message sent! We'll get back to you soon.");
-        setFormData({ name: '', email: '', subject: '', message: '' });
-        setIsLoading(false);
+        try {
+            await api.post('/contact/', formData);
+            toast.success("Message sent successfully!");
+            setFormData({ name: '', email: '', subject: '', message: '' });
+        } catch (error: any) {
+            console.error("Failed to send message", error);
+            const msg = error.response?.data?.error || "Failed to send message. Please try again later.";
+            toast.error(msg);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (

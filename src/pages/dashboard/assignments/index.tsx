@@ -111,7 +111,7 @@ export default function AssignmentsPage() {
         try {
             if (editingAssignment) {
                 const updated = await AssignmentService.updateAssignment(editingAssignment.id, data);
-                setAssignments(prev => prev.map(a => a.id === editingAssignment.id ? { ...a, ...updated } : a));
+                setAssignments(prev => prev.map(a => a.id === editingAssignment.id ? { ...a, ...(updated as any) } : a));
                 toast.success("Assignment updated");
             } else {
                 const created = await AssignmentService.createAssignment({ ...data, course: selectedCourseId });
@@ -142,6 +142,22 @@ export default function AssignmentsPage() {
         } catch (error) {
             setAssignments(originalAssignments);
             toast.error("Failed to delete assignment");
+        }
+    };
+
+
+    const handleDeleteExam = async (id: number) => {
+        if (!confirm("Are you sure you want to delete this quiz?")) return;
+        const originalQuizzes = [...quizzes];
+        // Optimistic delete
+        setQuizzes(prev => prev.filter(q => q.id !== id));
+        try {
+            await ExamService.deleteExam(id);
+            toast.success("Quiz deleted successfully");
+            if (viewMode === 'STATS') loadStats();
+        } catch (error) {
+            setQuizzes(originalQuizzes);
+            toast.error("Failed to delete quiz");
         }
     };
 
@@ -351,12 +367,20 @@ export default function AssignmentsPage() {
                                                 <tr key={quiz.id} className="hover:bg-white/5 transition-colors">
                                                     <td className="p-4 font-medium text-dark-text">{quiz.title}</td>
                                                     <td className="p-4 text-slate-700">
-                                                        {quiz.date ? new Date(quiz.date).toLocaleDateString() : 'TBD'}
+                                                        {quiz.start_time ? new Date(quiz.start_time).toLocaleString() : 'TBD'}
                                                     </td>
-                                                    <td className="p-4 text-slate-700">{quiz.duration ? `${quiz.duration} mins` : 'N/A'}</td>
+                                                    <td className="p-4 text-slate-700">
+                                                        {(() => {
+                                                            if (!quiz.start_time || !quiz.end_time) return 'N/A';
+                                                            const diffMs = new Date(quiz.end_time).getTime() - new Date(quiz.start_time).getTime();
+                                                            if (diffMs <= 0) return '0 mins';
+                                                            const diffMins = Math.round(diffMs / 60000);
+                                                            return diffMins < 60 ? `${diffMins} mins` : `${Math.floor(diffMins / 60)}h ${diffMins % 60}m`;
+                                                        })()}
+                                                    </td>
                                                     <td className="p-4 text-right">
-                                                        <button className="text-primary-600 hover:text-primary-500 mr-3">Edit</button>
-                                                        <button className="text-red-400 hover:text-red-300">Delete</button>
+                                                        <button onClick={() => { setEditingExam(quiz); setIsExamModalOpen(true); }} className="text-primary-600 hover:text-primary-500 text-sm mr-3">Edit</button>
+                                                        <button onClick={() => handleDeleteExam(quiz.id)} className="text-red-400 hover:text-red-300 text-sm">Delete</button>
                                                     </td>
                                                 </tr>
                                             ))
