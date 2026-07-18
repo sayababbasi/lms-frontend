@@ -44,14 +44,14 @@ export default function Login() {
         try {
             // AuthService.login returns the token AND the user object now.
             const data = await AuthService.login(formData.username, formData.password) as any;
-            
+
             if (data && (data.access || data.token)) {
                 if (rememberMe) {
                     localStorage.setItem('rememberMe_username', formData.username);
                 } else {
                     localStorage.removeItem('rememberMe_username');
                 }
-                
+
                 // Lightning Fast Routing: Use data.user from login response instead of making a 2nd API call
                 const user = data.user;
 
@@ -118,11 +118,13 @@ export default function Login() {
                 <div className="flex-1 flex flex-col items-center justify-between py-12 px-10 z-10">
                     {/* Logo */}
                     <div className="w-full">
-                        <img
-                            src="/branding/revoticai-new-logo-for-light-theme.png"
-                            alt="Revotic LMS"
-                            className="h-12 object-contain"
-                        />
+                        <a href="/">
+                            <img
+                                src="/branding/revoticai-new-logo-for-light-theme.png"
+                                alt="Revotic LMS"
+                                className="h-12 object-contain"
+                            />
+                        </a>
                     </div>
 
                     {/* Heading + illustration */}
