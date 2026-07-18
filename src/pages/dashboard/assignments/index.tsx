@@ -33,10 +33,9 @@ export default function AssignmentsPage() {
         if (viewMode === 'STATS') {
             loadStats();
         } else if (selectedCourseId) {
-            if (activeTab === 'ASSIGNMENTS') loadAssignments(selectedCourseId);
-            else loadQuizzes(selectedCourseId);
+            loadCourseData(selectedCourseId);
         }
-    }, [viewMode, activeTab, selectedCourseId]);
+    }, [viewMode, selectedCourseId]);
 
     const loadStats = async () => {
         setLoading(true);
@@ -51,30 +50,40 @@ export default function AssignmentsPage() {
         }
     };
 
+    const loadCourseData = async (courseId: number) => {
+        setLoading(true);
+        try {
+            const [assignmentsData, quizzesData] = await Promise.all([
+                AssignmentService.getAssignments(courseId),
+                ExamService.getExams(courseId)
+            ]);
+            setAssignments(Array.isArray(assignmentsData) ? assignmentsData : (assignmentsData as any).results || []);
+            setQuizzes(Array.isArray(quizzesData) ? quizzesData : (quizzesData as any).results || []);
+        } catch (error) {
+            console.error("Failed to load course data", error);
+            toast.error("Failed to load course assignments and quizzes");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleCreateExam = async (data: any) => {
         try {
-            // Ensure payload matches backend expectations
-            // Exam model expects: course (id), title, start_time, end_time
             const payload = {
                 ...data,
-                course: typeof data.course === 'object' ? data.course.id : data.course // Handle if course object or ID
+                course: typeof data.course === 'object' ? data.course.id : data.course
             };
 
             if (editingExam) {
-                // Assuming update endpoint exists, though service might need update
-                // ExamService.updateExam(editingExam.id, payload)
-                // For now, let's treat update same as create or assume unimplemented backend update for MVP
                 toast.error("Update function not yet fully implemented in service");
             } else {
-                await ExamService.createExam(payload);
+                const created = await ExamService.createExam(payload);
+                setQuizzes(prev => [created, ...prev]);
                 toast.success("Quiz created successfully");
             }
             setIsExamModalOpen(false);
             setEditingExam(null);
-            if (selectedCourseId) loadQuizzes(selectedCourseId);
-            // also reload stats if needed 
             if (viewMode === 'STATS') loadStats();
-
         } catch (error: any) {
             console.error("Failed to save quiz", error);
             const msg = error.response?.data?.detail
@@ -84,68 +93,34 @@ export default function AssignmentsPage() {
         }
     };
 
-    const loadAssignments = async (courseId: number) => {
-        setLoading(true);
-        try {
-            const data = await AssignmentService.getAssignments(courseId) as any;
-            setAssignments(Array.isArray(data) ? data : (data as any).results || []);
-        } catch (error) {
-            console.error("Failed to load assignments", error);
-            toast.error("Failed to load assignments");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-
-
-
-    const loadQuizzes = async (courseId: number) => {
-        setLoading(true);
-        try {
-            const data = await ExamService.getExams(courseId) as any;
-            // Check if ExamService needs import in index.tsx? It was missing in previous file view (line 1-6). 
-            // I'll add the import in a separate call or hope it's there. 
-            // Wait, I see lines 1-6 in previous view. It only has AssignmentService. 
-            // I need to add ExamService import too.
-            setQuizzes(Array.isArray(data) ? data : (data as any).results || []);
-        } catch (error) {
-            console.error("Failed to load quizzes", error);
-            toast.error("Failed to load quizzes");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-
     const handleManageCourse = (courseId: number) => {
+        // Clear previous state immediately so UI changes tab instantly without displaying stale data
+        setAssignments([]);
+        setQuizzes([]);
         setSelectedCourseId(courseId);
         setViewMode('LIST');
         setActiveTab('ASSIGNMENTS');
     };
-
 
     const handleBackToStats = () => {
         setViewMode('STATS');
         setSelectedCourseId(null);
     };
 
-
-
     const handleCreateAssignment = async (data: any) => {
         try {
             if (editingAssignment) {
-                await AssignmentService.updateAssignment(editingAssignment.id, data);
+                const updated = await AssignmentService.updateAssignment(editingAssignment.id, data);
+                setAssignments(prev => prev.map(a => a.id === editingAssignment.id ? { ...a, ...updated } : a));
                 toast.success("Assignment updated");
             } else {
-                await AssignmentService.createAssignment({ ...data, course: selectedCourseId }); // Ensure course is linked
+                const created = await AssignmentService.createAssignment({ ...data, course: selectedCourseId });
+                setAssignments(prev => [created, ...prev]);
                 toast.success("Assignment created successfully");
             }
             setIsAssignmentModalOpen(false);
             setEditingAssignment(null);
-            if (selectedCourseId) loadAssignments(selectedCourseId);
+            if (viewMode === 'STATS') loadStats();
         } catch (error: any) {
             console.error("Failed to save assignment", error);
             const msg = error.response?.data?.detail
@@ -155,15 +130,17 @@ export default function AssignmentsPage() {
         }
     };
 
-
-
     const handleDeleteAssignment = async (id: number) => {
         if (!confirm("Are you sure you want to delete this assignment?")) return;
+        const originalAssignments = [...assignments];
+        // Optimistic delete
+        setAssignments(prev => prev.filter(a => a.id !== id));
         try {
             await AssignmentService.deleteAssignment(id);
             toast.success("Assignment deleted");
-            if (selectedCourseId) loadAssignments(selectedCourseId);
+            if (viewMode === 'STATS') loadStats();
         } catch (error) {
+            setAssignments(originalAssignments);
             toast.error("Failed to delete assignment");
         }
     };
