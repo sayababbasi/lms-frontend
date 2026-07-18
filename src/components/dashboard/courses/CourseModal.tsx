@@ -1,7 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import api from '../../../utils/api'; // assuming api is available here
+import api from '../../../services/api';
 
 interface CourseModalProps {
     isOpen: boolean;
@@ -20,11 +20,12 @@ export default function CourseModal({ isOpen, onClose, onSubmit, isLoading, init
         // Fetch teachers for the select dropdowns
         const fetchTeachers = async () => {
             try {
-                const res = await api.get('/users/?is_teacher=true'); // Or whatever the users endpoint provides
-                if (res.data.results) {
-                    setTeachers(res.data.results.filter((u: any) => u.is_teacher));
-                } else if (Array.isArray(res.data)) {
-                    setTeachers(res.data.filter((u: any) => u.is_teacher));
+                const res = await api.get('/users/?is_teacher=true');
+                const responseData = res.data as any;
+                if (responseData.results) {
+                    setTeachers(responseData.results.filter((u: any) => u.is_teacher));
+                } else if (Array.isArray(responseData)) {
+                    setTeachers(responseData.filter((u: any) => u.is_teacher));
                 }
             } catch (err) {
                 console.error("Failed to fetch teachers", err);
