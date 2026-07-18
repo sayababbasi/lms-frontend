@@ -94,9 +94,7 @@ export default function Login() {
                 {/* Content */}
                 <div className="flex-1 flex flex-col items-center justify-center max-w-2xl mx-auto w-full px-8 z-10">
                     <div className="w-full mb-12">
-                        {/* Using actual logo */}
-                        <img src="/logo.png" alt="Logo" className="h-10 object-contain" onError={(e) => { e.currentTarget.style.display = 'none' }} />
-                        <span className="text-3xl font-extrabold text-blue-600 tracking-tight ml-2 hidden">Logo</span>
+                        <img src="/branding/revoticai-new-logo-for-light-theme.png" alt="Revotic LMS Logo" className="h-12 object-contain" />
                     </div>
 
                     <div className="text-center mb-10 w-full">
@@ -105,14 +103,12 @@ export default function Login() {
                     </div>
 
                     <div className="w-full flex justify-center mb-12 relative">
-                        {/* Illustration */}
                         <img 
                             src="/images/login-illustration.png" 
                             alt="Learning Illustration" 
-                            className="max-w-full h-auto w-[500px] object-contain drop-shadow-xl"
+                            className="w-full max-w-[620px] h-auto object-contain"
                             onError={(e) => {
-                                // Fallback generic shapes if illustration is missing
-                                e.currentTarget.src = "https://placehold.co/500x350/f4f7fb/6366f1?text=Please+Upload+Illustration+To\\n/public/images/login-illustration.png";
+                                e.currentTarget.src = "https://placehold.co/620x420/f4f7fb/6366f1?text=Illustration";
                             }}
                         />
                     </div>
@@ -151,7 +147,7 @@ export default function Login() {
             <div className="w-full lg:w-[45%] flex items-center justify-center p-6 bg-white relative">
                 {/* Mobile Logo Fallback */}
                 <div className="absolute top-8 left-8 lg:hidden">
-                    <img src="/logo.png" alt="Logo" className="h-8 object-contain" />
+                    <img src="/branding/revoticai-new-logo-for-light-theme.png" alt="Revotic LMS Logo" className="h-8 object-contain" />
                 </div>
 
                 <div className="w-full max-w-[440px] bg-white rounded-3xl p-10 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
